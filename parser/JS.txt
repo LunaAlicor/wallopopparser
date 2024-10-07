@@ -1,0 +1,19 @@
+
+document.querySelector('.textarea-element').value = 'Привет друг';
+
+
+const event = new Event('input', { bubbles: true });
+document.querySelector('.textarea-element').dispatchEvent(event);
+
+
+document.querySelector('.btn-send-message').click();
+
+
+---------------------------------------------------------------------------------
+
+
+document.getElementById('first_name').value = 'Assistenza Clienti ✔';
+
+
+
+
