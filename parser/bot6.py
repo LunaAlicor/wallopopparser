@@ -12,9 +12,11 @@ PARSE_INPUT = 1
 default = "9"
 db.connect()
 
+
 class BaseModel(Model):
     class Meta:
         database = db
+
 
 class User(BaseModel):
     name = CharField()
@@ -23,15 +25,19 @@ class User(BaseModel):
     user_link = CharField()
     check_status = BooleanField(default=False)
 
+
 class Item(BaseModel):
     name = CharField()
     image_link = CharField()
     stuff_url = CharField()
-    last_modified = CharField()
+    # last_modified = CharField()
     user = ForeignKeyField(User, backref='items')
+    update_time = CharField(null=True)
+
 
 # Создаем пул потоков для выполнения длительных задач
 executor = ThreadPoolExecutor()
+
 
 # Функция для создания инлайн-клавиатуры с категориями
 def create_categories_keyboard():
@@ -48,6 +54,7 @@ def create_categories_keyboard():
         [InlineKeyboardButton("Все товары(Новые)", callback_data='cat_10')],
         [InlineKeyboardButton("Одежда(Новая)", callback_data='cat_11')],
         [InlineKeyboardButton("Спорт(Новые)", callback_data='cat_12')],
+        [InlineKeyboardButton("Открыть меню", callback_data='back_to_menu')],
     ])
     return keyboard
 
@@ -75,7 +82,7 @@ async def search_users(update: Update, context, page=0):
     users_per_page = 1
 
     # Получаем всех пользователей с check_status = False
-    users = User.select().where(User.check_status == False)
+    users = User.select().where(User.check_status is False)
 
     # Если пользователей нет, отправляем сообщение
     if not users.exists():
@@ -98,19 +105,20 @@ async def search_users(update: Update, context, page=0):
     keyboard = []
     for user in current_users:
         # Собираем информацию о пользователе и его товарах
-        response += f"Имя: {user.name}\nДата регистрации: {user.registration_date}\nСделок: {user.sales_count}\nСсылка на пользователя: {user.user_link}\nТовары:\n"
-
+        response += f"Имя: {user.name}\nДата регистрации: {user.registration_date}\nСделок: {user.sales_count}\nСсылка на пользователя: {user.user_link}\n"
+        active_time = None
         # Получаем все товары пользователя
         items = Item.select().where(Item.user == user)
         for item in items:
             # Отправляем картинку товара
+            active_time = item.update_time if item.update_time is not None else "Не найдено"
             await context.bot.send_photo(
                 chat_id=update.message.chat_id,
                 photo=item.image_link,  # Ссылка на изображение товара
                 caption=f"{item.name}: {item.stuff_url}"
             )
             break  # Можно удалить для вывода всех товаров
-
+        response += f"Последняя активность: {active_time}\n"
         response += "\n"  # Добавляем пустую строку для разделения пользователей
 
         # Кнопка для изменения статуса
@@ -122,6 +130,8 @@ async def search_users(update: Update, context, page=0):
         nav_keyboard.append(InlineKeyboardButton("Предыдущие", callback_data=f'prev_{page - 1}'))
     if end_idx < total_users:
         nav_keyboard.append(InlineKeyboardButton("Следующие", callback_data=f'next_{page + 1}'))
+
+    keyboard.append([InlineKeyboardButton("Открыть меню", callback_data='back_to_menu')])
 
     if nav_keyboard:
         keyboard.append(nav_keyboard)
@@ -189,6 +199,8 @@ async def button(update: Update, context):
 
         # Показываем основное меню после выбора категории
         await start(update, context)
+    elif choice == 'back_to_menu':
+        await start(update, context)
 
     return ConversationHandler.END
 
@@ -198,6 +210,7 @@ async def run_parsing(count, update):
     # Запускаем синхронную функцию парсинга в отдельном потоке
     await loop.run_in_executor(executor, main2.parsing, count, default)
     await update.message.reply_text(f'Парсинг завершен для {count} элементов.')
+
 
 # Обработчик ввода числа
 async def parse_input(update: Update, context):
@@ -213,6 +226,7 @@ async def parse_input(update: Update, context):
 
         # Отправляем сообщение пользователю о начале парсинга
         await update.message.reply_text(f'Начинаем парсинг {user_input} элементов...')
+        await start(update, context)
 
         # Запускаем парсинг асинхронно
         asyncio.create_task(run_parsing(user_input, update))
