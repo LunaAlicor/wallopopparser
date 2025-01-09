@@ -15,7 +15,7 @@ import logging
 from datetime import datetime
 
 
-def parsing(count, d, r=1):
+def parsing(count, d, r='1'):
     try:
         db = SqliteDatabase('wallapop_items.db')
 
@@ -44,21 +44,68 @@ def parsing(count, d, r=1):
 
         urls = ["https://it.wallapop.com", "https://es.wallapop.com", "https://uk.wallapop.com"]
         test_url = "https://it.wallapop.com/app/search?category_ids=12465&filters_source=category_navigation&longitude=12.4942&latitude=41.8905"
-        catalogs = {"1": "https://it.wallapop.com/app/search?filters_source=category_navigation&longitude=12.4942&latitude=41.8905",
-                    "2": "https://it.wallapop.com/moto",
-                    "3":"https://it.wallapop.com/motori-e-accessori",
-                    "4": "https://it.wallapop.com/tv-audio-e-fotocamere",
-                    "5": "https://it.wallapop.com/telefonia-e-accessori",
-                    "6": "https://it.wallapop.com/sport-e-tempo-libero",
-                    "7": "https://it.wallapop.com/bambini-e-neonati",
-                    "8": "https://it.wallapop.com/industria-e-agricoltura",
-                    "9": "https://it.wallapop.com/app/search?category_ids=12465&filters_source=category_navigation&longitude=12.4942&latitude=41.8905",
-                    "10": "https://it.wallapop.com/app/search?filters_source=quick_filters&longitude=12.4942&latitude=41.8905&condition=new",
-                    "11": "https://it.wallapop.com/app/search?category_ids=12465&filters_source=quick_filters&longitude=12.4942&latitude=41.8905&condition=new",
-                    "12": "https://it.wallapop.com/app/search?category_ids=12579&filters_source=quick_filters&longitude=12.4942&latitude=41.8905&condition=new",
-        }
-        test_url = catalogs[d]
+        catalogs = None
+        if r == '1':
+            catalogs = {"1": "https://it.wallapop.com/app/search?filters_source=category_navigation&longitude=12.4942&latitude=41.8905",
+                        "2": "https://it.wallapop.com/moto",
+                        "3":"https://it.wallapop.com/motori-e-accessori",
+                        "4": "https://it.wallapop.com/tv-audio-e-fotocamere",
+                        "5": "https://it.wallapop.com/telefonia-e-accessori",
+                        "6": "https://it.wallapop.com/sport-e-tempo-libero",
+                        "7": "https://it.wallapop.com/bambini-e-neonati",
+                        "8": "https://it.wallapop.com/industria-e-agricoltura",
+                        "9": "https://it.wallapop.com/app/search?category_ids=12465&filters_source=category_navigation&longitude=12.4942&latitude=41.8905",
+                        "10": "https://it.wallapop.com/app/search?filters_source=quick_filters&longitude=12.4942&latitude=41.8905&condition=new",
+                        "11": "https://it.wallapop.com/app/search?category_ids=12465&filters_source=quick_filters&longitude=12.4942&latitude=41.8905&condition=new",
+                        "12": "https://it.wallapop.com/app/search?category_ids=12579&filters_source=quick_filters&longitude=12.4942&latitude=41.8905&condition=new",
+            }
+        elif r == '2':
+            catalogs = {
+                "1": "https://es.wallapop.com/app/search?filters_source=category_navigation&longitude=-3.69196&latitude=40.41956",
+                "2": "https://es.wallapop.com/motos",
+                "3": "https://es.wallapop.com/motor-y-accesorios",
+                "4": "https://es.wallapop.com/tv-audio-foto",
+                "5": "https://es.wallapop.com/moviles-telefonos",
+                "6": "https://es.wallapop.com/deporte-y-ocio",
+                "7": "https://es.wallapop.com/ninos-y-bebes",
+                "8": "https://es.wallapop.com/industria-agricultura",
+                "9": "https://es.wallapop.com/moda-y-complementos",
+                "10": "https://es.wallapop.com/app/search?filters_source=quick_filters&longitude=-3.69196&latitude=40.41956&condition=new",
+                "11": "https://es.wallapop.com/app/search?category_ids=12465&filters_source=quick_filters&longitude=-3.69196&latitude=40.41956&condition=new",
+                "12": "https://es.wallapop.com/app/search?category_ids=12579&filters_source=quick_filters&longitude=-3.69196&latitude=40.41956&condition=new",
+                }
+        elif r == '4':
+            catalogs = {
+                "1": "https://pt.wallapop.com/app/search?filters_source=category_navigation&longitude=-9.142685&latitude=38.736946",
+                "2": "https://pt.wallapop.com/moto",
+                "3": "https://pt.wallapop.com/motores-e-acessorios",
+                "4": "https://pt.wallapop.com/tv-audio-fotografia",
+                "5": "https://pt.wallapop.com/telemoveis-e-acessorios",
+                "6": "https://pt.wallapop.com/desporto-e-lazer",
+                "7": "https://pt.wallapop.com/criancas-e-bebes",
+                "8": "https://pt.wallapop.com/industria-e-agricultura",
+                "9": "https://pt.wallapop.com/app/search?category_ids=12465&filters_source=category_navigation&longitude=-9.142685&latitude=38.736946",
+                "10": "https://pt.wallapop.com/app/search?filters_source=quick_filters&longitude=-9.142685&latitude=38.736946&condition=new",
+                "11": "https://pt.wallapop.com/app/search?category_ids=12465&filters_source=quick_filters&longitude=-9.142685&latitude=38.736946&condition=new",
+                "12": "https://pt.wallapop.com/app/search?category_ids=12579&filters_source=quick_filters&longitude=-9.142685&latitude=38.736946&condition=new",
+                }
+        elif r == '5':
+            catalogs = {
+                "1": "https://fr.wallapop.com/app/search?filters_source=category_navigation&longitude=-0.118092&latitude=51.509865",
+                "2": "https://fr.wallapop.com/motos",
+                "3": "https://fr.wallapop.com/app/search?category_ids=12800&filters_source=category_navigation&longitude=-0.118092&latitude=51.509865",
+                "4": "https://fr.wallapop.com/image-et-son",
+                "5": "https://fr.wallapop.com/telephonie",
+                "6": "https://fr.wallapop.com/app/search?category_ids=12579&filters_source=category_navigation&longitude=-0.118092&latitude=51.509865",
+                "7": "https://fr.wallapop.com/app/search?category_ids=12461&filters_source=category_navigation&longitude=-0.118092&latitude=51.509865",
+                "8": "https://fr.wallapop.com/app/search?category_ids=20000&filters_source=category_navigation&longitude=-0.118092&latitude=51.509865",
+                "9": "https://fr.wallapop.com/app/search?category_ids=12465&filters_source=category_navigation&longitude=-0.118092&latitude=51.509865",
+                "10": "https://fr.wallapop.com/app/search?filters_source=quick_filters&longitude=-0.118092&latitude=51.509865&condition=new",
+                "11": "https://fr.wallapop.com/app/search?category_ids=12465&filters_source=quick_filters&longitude=-0.118092&latitude=51.509865&condition=new",
+                "12": "https://fr.wallapop.com/app/search?category_ids=12579&filters_source=quick_filters&longitude=-0.118092&latitude=51.509865&condition=new",
+                }
 
+        test_url = catalogs[d]
 
         chrome_options = Options()
         chrome_options.add_argument("--headless")
@@ -213,4 +260,4 @@ def parsing(count, d, r=1):
 
 
 if __name__ == "__main__":
-    parsing(1, d="9")
+    parsing(1, d="9", r='1')

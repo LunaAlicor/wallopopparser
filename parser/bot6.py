@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 db = SqliteDatabase('wallapop_items.db')
 PARSE_INPUT = 1
 default = "9"
+domen = "1"
 db.connect()
 
 
@@ -58,22 +59,37 @@ def create_categories_keyboard():
     ])
     return keyboard
 
+
+def create_domen_keyboard():
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton("IT", callback_data='dom_1')],
+        [InlineKeyboardButton("ES", callback_data='dom_2')],
+        [InlineKeyboardButton("EN(Не работает)", callback_data='dom_3')],
+        [InlineKeyboardButton("PT", callback_data='dom_4')],
+        [InlineKeyboardButton("FR", callback_data='dom_5')],
+    ])
+    return keyboard
+
+
+# Обработчик команды /start
 # Обработчик команды /start
 async def start(update: Update, context):
     # Создаем кнопки
     keyboard = [
         [InlineKeyboardButton("Поиск анкет в БД", callback_data='1')],
         [InlineKeyboardButton("Начать парсинг", callback_data='2')],
-        [InlineKeyboardButton("Настройка", callback_data='3')]
+        [InlineKeyboardButton("Настройка парсинга", callback_data='3')],
+        [InlineKeyboardButton("Настройка домена", callback_data='4')]
     ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    # Отправляем сообщение с меню
-    if update.callback_query:  # Если это был вызов через кнопку
-        await update.callback_query.edit_message_text('Выберите действие:', reply_markup=reply_markup)
-    else:  # Если это вызов команды /start
+    # Проверяем, какой тип update пришел — сообщение или callback_query
+    if update.message:  # Если это вызов команды /start
         await update.message.reply_text('Выберите действие:', reply_markup=reply_markup)
+    elif update.callback_query:  # Если это был вызов через кнопку
+        await update.callback_query.edit_message_text('Выберите действие:', reply_markup=reply_markup)
+
 
 # Функция для поиска пользователей с check_status = False
 async def search_users(update: Update, context, page=0):
@@ -82,12 +98,19 @@ async def search_users(update: Update, context, page=0):
     users_per_page = 1
 
     # Получаем всех пользователей с check_status = False
-    users = User.select().where(User.check_status is False)
+    users = User.select().where(User.check_status == False).order_by(User.id.desc())  # ебать прикол ==\is по разному работают
 
     # Если пользователей нет, отправляем сообщение
     if not users.exists():
-        await update.message.reply_text("Не найдено пользователей с check_status = False.")
+        if update.message:
+            await update.message.reply_text("Не найдено пользователей с check_status = False.")
+            await start(update, context)  # Открываем меню через сообщение
+        elif update.callback_query:
+            await update.callback_query.edit_message_text("Не найдено пользователей с check_status = False.")
+            await start(update, context)  # Открываем меню через callback_query
+
         db.close()
+
         return
 
     # Считаем общее количество пользователей и страницы
@@ -146,7 +169,7 @@ async def search_users(update: Update, context, page=0):
 
 # Обработчик нажатий на кнопки
 async def button(update: Update, context):
-    global default  # используем глобальную переменную
+    global default, domen  # используем глобальную переменную
     query = update.callback_query
     await query.answer()  # Подтверждение клика
 
@@ -189,6 +212,9 @@ async def button(update: Update, context):
         # Показать категории для выбора
         await query.edit_message_text(text="Выберите категорию:", reply_markup=create_categories_keyboard())
 
+    elif choice == '4':
+        await query.edit_message_text(text="Выберите домен:", reply_markup=create_domen_keyboard())
+
     # Обработка выбора категории
     elif choice.startswith('cat_'):
         # Извлекаем номер категории из callback_data
@@ -199,6 +225,17 @@ async def button(update: Update, context):
 
         # Показываем основное меню после выбора категории
         await start(update, context)
+
+    elif choice.startswith('dom_'):
+        # Извлекаем номер категории из callback_data
+        domen = choice.split('_')[1]  # Получаем числовое значение после 'dom_'
+
+        # Отправляем сообщение с выбранной категорией
+        await query.edit_message_text(text=f"Вы выбрали домен: {default}")
+
+        # Показываем основное меню после выбора категории
+        await start(update, context)
+
     elif choice == 'back_to_menu':
         await start(update, context)
 
@@ -208,8 +245,8 @@ async def button(update: Update, context):
 async def run_parsing(count, update):
     loop = asyncio.get_event_loop()
     # Запускаем синхронную функцию парсинга в отдельном потоке
-    await loop.run_in_executor(executor, main2.parsing, count, default)
-    await update.message.reply_text(f'Парсинг завершен для {count} элементов.')
+    await loop.run_in_executor(executor, main2.parsing, count, default, domen)
+    await update.message.reply_text(f'Парсинг завершен для {count} элементов на домене {domen}.')
 
 
 # Обработчик ввода числа
