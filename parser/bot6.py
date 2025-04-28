@@ -284,7 +284,7 @@ async def cancel(update: Update, context):
 # Основная функция
 if __name__ == '__main__':
     # Вставь сюда свой токен от BotFather
-    TOKEN = '7244071614:AAEgw2tdS0SSsa98Q80HXLlUCCgcwJurET4'
+    TOKEN = ''
 
     # Создаем приложение для бота
     app = ApplicationBuilder().token(TOKEN).build()
